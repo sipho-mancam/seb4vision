@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 import pprint
 import argparse
+import shutil
 
 
 # read a labels file and store every line to a list and return the list.
@@ -23,12 +24,12 @@ def map_coco2custom(data:list[str], r_map:dict, index:int=0)->list[str]:
         k = line.split(' ')
         
         try:
-            k[index] = r_map[k[index]]  
+            k[index] = r_map[k[index]]
+            s = ' '.join(k)
+            res.append(s)  
         except KeyError as ke:
             pass
-        s = ' '.join(k)
-       
-        res.append(s)
+        
     return res
 
 # delete all the lines in the file that do not represent r_map entries
@@ -46,7 +47,10 @@ def delete_all_lines_without(data:list[str], entries=["0", "32"], index=0)->list
 
 #  write the data back to the file.
 def write_list_to_file(data:list, file:Path|str=None)->bool:
-    if os.path.exists(file) and len(data)>0:
+    if os.path.exists(file):
+        if len(data) == 0:
+            os.remove(file)
+            return True
         with open(file, mode='w') as fp:
             fp.writelines(data)
         return True
@@ -55,14 +59,15 @@ def write_list_to_file(data:list, file:Path|str=None)->bool:
         return False
 
 # run the porcess to change the files.
-def process_data_maping(file, r_map={"1":"0"}, index=0):
+def process_data_maping(file:Path, r_map={"32":"1"}, index=0):
     l = read_file_to_list(file)
     if len(l)>0:
         n_l = map_coco2custom(l, r_map, index)
         # write data back to the file
         return write_list_to_file(n_l, file)
     else:
-        print("File is empty")
+        print(f"File is empty\nDeleting Empty file: {file.name}")
+        os.remove(file)
     
 
 def main():

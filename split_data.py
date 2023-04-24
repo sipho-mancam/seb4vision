@@ -4,6 +4,7 @@ from pathlib import Path
 import os
 from datetime import date
 import argparse
+from removeFiles import get_ext
 
 def move_files(source:Path, dest:Path):
     if os.path.exists(source) and os.path.exists(dest):
@@ -45,10 +46,10 @@ def main():
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--source-dir", type=str)
-    parser.add_argument("--dest-dir", type=str)
+    parser.add_argument("-s","--source-dir", type=str)
+    parser.add_argument("-d","--dest-dir", type=str)
     parser.add_argument("-c", "--children", type=str, default="train val test")
-    parser.add_argument("-s", "--sample", type=bool, default=False, help="Activate the flag to either sample data by --value or split everything")
+    parser.add_argument("-sp", "--sample", type=bool, default=False, help="Activate the flag to either sample data by --value or split everything")
     parser.add_argument("-s-c", "--sample-count", type=int, help="This values will determining how many files will be in each folder.")
 
     opt = parser.parse_args()
@@ -57,7 +58,7 @@ def main():
     dest_dir = f"/home/jurie/Computer Vision/Segmentation - data/{date.today()}"
 
     if opt.source_dir is not None and opt.dest_dir is not None:
-        data_directory = opt.sourc_dir
+        data_directory = opt.source_dir
         dest_dir = opt.dest_dir
 	
     
@@ -76,6 +77,7 @@ def main():
     # Move images first
     for image in os.scandir(Path(images_dir)):
         if image.is_file():
+            
             if not os.path.isdir(Path(dest_dir+'/'+l[index]+'/images/')):
                 os.mkdir(Path(dest_dir+'/'+l[index]+'/images/'))
                 try:
@@ -86,10 +88,10 @@ def main():
                 shutil.move(Path(image.path),Path(dest_dir+'/'+l[index]+'/images/'+image.name))
                
 
-                shutil.move(Path(Path(image.path).parent.parent.as_posix()+'/labels/'+image.name.replace('bmp', 'txt')), 
-                            Path(dest_dir+'/'+l[index]+'/labels/'+image.name.replace('bmp', 'txt')))
+                shutil.move(Path(Path(image.path).parent.parent.as_posix()+'/labels/'+image.name.replace(get_ext(image.name), 'txt')), 
+                            Path(dest_dir+'/'+l[index]+'/labels/'+image.name.replace(get_ext(image.name), 'txt')))
                 
-                print(f"Moving: Images: {image.name} and Label: {image.name.replace('bmp', 'txt')}")
+                print(f"Moving: Images: {image.name} and Label: {image.name.replace(get_ext(image.name), 'txt')}")
             except FileNotFoundError as fnf:
                 print(f"\tMissed file: {image.name} in {l[index]}\n Cause: {fnf}")
                 print(f"Deleting file: {image.name}")

@@ -33,11 +33,10 @@ def process(path_1:Path, path_2:Path, ext='txt')->int:
         files_available = getAvailableFileList(path_1)
         file_to_comp = getAvailableFileList(path_2)
 
-        files_available['files'] = generateExt(files_available, ext)
-        
+        files_available['files'] = generateExt(files_available['files'], ext)
         # check if the files available match those in comp
         for file in file_to_comp['files']:
-            if file not in file_to_comp:
+            if file not in files_available['files']:
                remove_file(file, file_to_comp['dir'])
                c += 1
                print(f"Removing : {file} from the directory")
@@ -52,6 +51,30 @@ def delete_images(path_images:Path, path_labels:Path, ext='bmp')->int:
 def delete_labels(path_images, path_labels:Path, ext='txt')->int:
     return process(path_images, path_labels, ext)
 
+def get_ext(p_:Path)->str:
+    if type(p_) is not str:
+        if os.path.isdir(p_):
+            for f in os.scandir(p_):
+                s = f.name.split('.')
+                if len(s)>1:
+                    return s[1]
+                else:
+                    return ""
+        elif os.path.isfile(p_):
+            s = p_.name.split('.')
+            if len(s)>1:
+                return s[1]
+            else:
+                return ""
+    elif type(p_) is str:
+        if not os.path.exists(p_): # This means, it might be a name
+            s = p_.split('.')
+            if len(s)>1:
+                return s[1]
+            else:
+                return ""
+        else:
+            return get_ext(Path(p_))
 
 
 def main():
@@ -76,7 +99,12 @@ def main():
     proc['images'] = delete_images
     proc['labels'] = delete_labels
     key = 'labels' if opt.key == 0 else 'images'
-    c = proc[key](images_path, labels_path)
+    if key == 'labels':
+        ext = get_ext(labels_path)
+    else:
+        ext = get_ext(images_path)
+
+    c = proc[key](images_path, labels_path, ext)
 
     print(f"Total files deleted: {c}")
 
