@@ -54,16 +54,6 @@ class Cycler:
 
 
 
-    
-    
-                
-        
-
-
-
-
-
-
 
 def main():
 
